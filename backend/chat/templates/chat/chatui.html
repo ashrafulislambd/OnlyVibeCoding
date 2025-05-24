@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat UI</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
 
@@ -91,6 +93,11 @@
             <path fill-rule="evenodd" clip-rule="evenodd" d="M1 1H15V15H1V1ZM6 9L8 11L13 6V13H3V12L6 9ZM6.5 7C7.32843 7 8 6.32843 8 5.5C8 4.67157 7.32843 4 6.5 4C5.67157 4 5 4.67157 5 5.5C5 6.32843 5.67157 7 6.5 7Z" fill="#000000"/>
           </svg>
         </button>
+        <button id="map-btn" class="ml-3 mr-3 text-blue-500 hover:text-blue-700 focus:outline-none">
+            <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5.7 15C4.03377 15.6353 3 16.5205 3 17.4997C3 19.4329 7.02944 21 12 21C16.9706 21 21 19.4329 21 17.4997C21 16.5205 19.9662 15.6353 18.3 15M12 9H12.01M18 9C18 13.0637 13.5 15 12 18C10.5 15 6 13.0637 6 9C6 5.68629 8.68629 3 12 3C15.3137 3 18 5.68629 18 9ZM13 9C13 9.55228 12.5523 10 12 10C11.4477 10 11 9.55228 11 9C11 8.44772 11.4477 8 12 8C12.5523 8 13 8.44772 13 9Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
         <input id="message-input" type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type a message...">
         <button id="send-btn" class="ml-3 text-blue-500 hover:text-blue-700 focus:outline-none">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
@@ -134,49 +141,80 @@
     });
 
     function buildMessage(msg) {
-        const isSent = (msg.sender === CURRENT_USER_ID);
-        const wrapper = document.createElement('div');
-        wrapper.classList.add('flex');
-        if (isSent) wrapper.classList.add('justify-end');
+    const isSent = (msg.sender === CURRENT_USER_ID);
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('flex');
+    if (isSent) wrapper.classList.add('justify-end');
 
-        // avatar
-        const avatar = document.createElement('img');
-        avatar.src = msg.image || 'https://randomuser.me/api/portraits/lego/1.jpg';
-        avatar.classList.add('w-8','h-8','rounded-full','object-cover');
-        avatar.classList.add(isSent ? 'ml-3' : 'mr-3');
+    // Avatar
+    const avatar = document.createElement('img');
+    avatar.src = msg.image || 'https://randomuser.me/api/portraits/lego/1.jpg';
+    avatar.classList.add('w-8', 'h-8', 'rounded-full', 'object-cover');
+    avatar.classList.add(isSent ? 'ml-3' : 'mr-3');
 
-        // bubble
-        const bubble = document.createElement('div');
-        const extraClasses = isSent
-            ? ['bg-blue-500','text-white']
-            : ['bg-gray-200','text-gray-800'];
-        bubble.classList.add('p-3','rounded-lg','max-w-xs', ...extraClasses);
+    // Bubble
+    const bubble = document.createElement('div');
+    const extraClasses = isSent
+        ? ['bg-blue-500', 'text-white']
+        : ['bg-gray-200', 'text-gray-800'];
+    bubble.classList.add('p-3', 'rounded-lg', 'max-w-xs', ...extraClasses);
 
-        // 🧠 Detect base64 image string and show <img>
-        let content;
-        if (msg.message.startsWith('data:image')) {
-            content = `<img src="${msg.message}" class="max-w-full rounded-md">`;
-        } else {
-            content = `<p class="text-sm">${msg.message}</p>`;
-        }
+    // 🧠 Detect message type
+    let content;
+    const isImage = msg.message.startsWith('data:image');
+    const locationMatch = msg.message.match(/^lat:([0-9.\-]+),\s*long:([0-9.\-]+)$/i);
 
-        bubble.innerHTML = `
-            ${content}
-            <p class="text-[10px] text-gray-100 ${isSent ? '' : 'text-gray-500'} text-right mt-1">
-            ${new Date(msg.timestamp).toLocaleTimeString()}
-            </p>
+    if (isImage) {
+        // Show image
+        content = `<img src="${msg.message}" class="max-w-full rounded-md">`;
+    } else if (locationMatch) {
+        // Show location view button
+        const lat = parseFloat(locationMatch[1]);
+        const lng = parseFloat(locationMatch[2]);
+
+        const locationId = 'view-btn-' + Date.now() + Math.random(); // unique ID for button
+        content = `
+            <div class="text-sm">
+                📍 Location Shared<br>
+                <button id="${locationId}" class="mt-2 px-3 py-1 text-sm bg-white text-black rounded">
+                    View Location
+                </button>
+            </div>
         `;
 
-        if (isSent) {
-            wrapper.appendChild(bubble);
-            wrapper.appendChild(avatar);
-        } else {
-            wrapper.appendChild(avatar);
-            wrapper.appendChild(bubble);
-        }
-
-        return wrapper;
+        // Delay adding event listener to wait until it's in the DOM
+        setTimeout(() => {
+            const btn = document.getElementById(locationId);
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    showLocationOnMap(lat, lng);
+                });
+            }
+        }, 0);
+    } else {
+        // Plain text
+        content = `<p class="text-sm">${msg.message}</p>`;
     }
+
+    // Add content and timestamp
+    bubble.innerHTML = `
+        ${content}
+        <p class="text-[10px] text-gray-100 ${isSent ? '' : 'text-gray-500'} text-right mt-1">
+            ${new Date(msg.timestamp).toLocaleTimeString()}
+        </p>
+    `;
+
+    // Append in correct order
+    if (isSent) {
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(avatar);
+    } else {
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+    }
+
+    return wrapper;
+}
 
     async function pollInbox() {
       try {
@@ -261,7 +299,195 @@ function sendMessage(userId, messageText) {
       pollInbox();
       setInterval(pollInbox, POLL_INTERVAL);
     });
-  </script>
+
+    function selectLocationOnMap() {
+        return new Promise((resolve) => {
+            // 1. Create modal container
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+            `;
+
+            // 2. Map wrapper
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = `
+            width: 80vw; height: 80vh; background: white;
+            border-radius: 10px; overflow: hidden; position: relative;
+            display: flex; flex-direction: column;
+            `;
+
+            // 3. Header with instructions
+            const header = document.createElement('div');
+            header.innerText = "📍 Click on the map to select a location. Drag the marker to adjust.";
+            header.style.cssText = `
+            padding: 12px; font-size: 16px; font-weight: bold;
+            background: #f0f0f0; text-align: center; border-bottom: 1px solid #ccc;
+            `;
+
+            // 4. Map container
+            const mapDiv = document.createElement('div');
+            mapDiv.style.cssText = `flex: 1;`;
+            mapDiv.id = 'leaflet-map-' + Date.now();
+
+            // 5. Footer with buttons
+            const footer = document.createElement('div');
+            footer.style.cssText = `
+            padding: 10px; background: #f9f9f9; border-top: 1px solid #ccc;
+            display: flex; justify-content: flex-end; gap: 10px;
+            `;
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerText = "Cancel";
+            cancelBtn.style.cssText = `padding: 6px 12px;`;
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.innerText = "Confirm";
+            confirmBtn.disabled = true;
+            confirmBtn.style.cssText = `padding: 6px 12px; background: #007bff; color: white; border: none;`;
+            
+            // 6. Assemble modal
+            footer.appendChild(cancelBtn);
+            footer.appendChild(confirmBtn);
+            wrapper.appendChild(header);
+            wrapper.appendChild(mapDiv);
+            wrapper.appendChild(footer);
+            modal.appendChild(wrapper);
+            document.body.appendChild(modal);
+
+            // 7. Setup Leaflet map
+            const map = L.map(mapDiv.id).setView([20, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            }).addTo(map);
+
+            let marker = null;
+            let selectedLatLng = null;
+
+            map.on('click', (e) => {
+            const { lat, lng } = e.latlng;
+            selectedLatLng = e.latlng;
+
+            if (marker) {
+                marker.setLatLng(e.latlng);
+            } else {
+                marker = L.marker(e.latlng, { draggable: true }).addTo(map);
+                marker.bindPopup("Drag to adjust. Click 'Confirm' when ready.").openPopup();
+
+                marker.on('dragend', (event) => {
+                selectedLatLng = event.target.getLatLng();
+                });
+            }
+
+            confirmBtn.disabled = false;
+            });
+
+            const cleanup = () => {
+            map.remove();
+            document.body.removeChild(modal);
+            };
+
+            cancelBtn.onclick = () => {
+            cleanup();
+            resolve(null);
+            };
+
+            confirmBtn.onclick = () => {
+            if (selectedLatLng) {
+                cleanup();
+                resolve({
+                latitude: selectedLatLng.lat,
+                longitude: selectedLatLng.lng
+                });
+            }
+            };
+        });
+    }
+
+    function showLocationOnMap(latitude, longitude) {
+        // 1. Create modal container
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        `;
+
+        // 2. Wrapper for the modal content
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+            width: 80vw; height: 80vh; background: white;
+            border-radius: 10px; overflow: hidden; position: relative;
+            display: flex; flex-direction: column;
+        `;
+
+        // 3. Header with info
+        const header = document.createElement('div');
+        header.innerText = `📍 Showing location: Latitude ${latitude.toFixed(5)}, Longitude ${longitude.toFixed(5)}`;
+        header.style.cssText = `
+            padding: 12px; font-size: 16px; font-weight: bold;
+            background: #f0f0f0; text-align: center; border-bottom: 1px solid #ccc;
+        `;
+
+        // 4. Map container
+        const mapDiv = document.createElement('div');
+        mapDiv.style.cssText = `flex: 1;`;
+        mapDiv.id = 'leaflet-map-view-' + Date.now();
+
+        // 5. Footer with close button
+        const footer = document.createElement('div');
+        footer.style.cssText = `
+            padding: 10px; background: #f9f9f9; border-top: 1px solid #ccc;
+            display: flex; justify-content: flex-end;
+        `;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.innerText = "Close";
+        closeBtn.style.cssText = `padding: 6px 12px;`;
+
+        // 6. Assemble the modal
+        footer.appendChild(closeBtn);
+        wrapper.appendChild(header);
+        wrapper.appendChild(mapDiv);
+        wrapper.appendChild(footer);
+        modal.appendChild(wrapper);
+        document.body.appendChild(modal);
+
+        // 7. Initialize the Leaflet map
+        const map = L.map(mapDiv.id).setView([latitude, longitude], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+        }).addTo(map);
+
+        const marker = L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup(`Lat: ${latitude.toFixed(5)}, Lng: ${longitude.toFixed(5)}`)
+            .openPopup();
+
+        // 8. Close button handler
+        const cleanup = () => {
+            map.remove();
+            document.body.removeChild(modal);
+        };
+
+        closeBtn.onclick = cleanup;
+    }
+
+    const func = async () => {
+        const coords = await selectLocationOnMap();
+        console.log(coords);
+
+        await showLocationOnMap(coords.latitude, coords.longitude);
+    };
+
+    document.getElementById("map-btn").addEventListener("click", async (e) => {
+        const coords = await selectLocationOnMap();
+        sendMessage(OTHER_USER_ID, `lat:${coords.latitude},long:${coords.longitude}`);
+    });
+</script>
 
 </body>
 </html>

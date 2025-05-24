@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Include this once in your HTML head -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        function selectLocationOnMap() {
+            return new Promise((resolve) => {
+                // 1. Create modal container
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5);
+                display: flex; align-items: center; justify-content: center;
+                z-index: 9999;
+                `;
+
+                // 2. Map wrapper
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = `
+                width: 80vw; height: 80vh; background: white;
+                border-radius: 10px; overflow: hidden; position: relative;
+                display: flex; flex-direction: column;
+                `;
+
+                // 3. Header with instructions
+                const header = document.createElement('div');
+                header.innerText = "📍 Click on the map to select a location. Drag the marker to adjust.";
+                header.style.cssText = `
+                padding: 12px; font-size: 16px; font-weight: bold;
+                background: #f0f0f0; text-align: center; border-bottom: 1px solid #ccc;
+                `;
+
+                // 4. Map container
+                const mapDiv = document.createElement('div');
+                mapDiv.style.cssText = `flex: 1;`;
+                mapDiv.id = 'leaflet-map-' + Date.now();
+
+                // 5. Footer with buttons
+                const footer = document.createElement('div');
+                footer.style.cssText = `
+                padding: 10px; background: #f9f9f9; border-top: 1px solid #ccc;
+                display: flex; justify-content: flex-end; gap: 10px;
+                `;
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.innerText = "Cancel";
+                cancelBtn.style.cssText = `padding: 6px 12px;`;
+
+                const confirmBtn = document.createElement('button');
+                confirmBtn.innerText = "Confirm";
+                confirmBtn.disabled = true;
+                confirmBtn.style.cssText = `padding: 6px 12px; background: #007bff; color: white; border: none;`;
+                
+                // 6. Assemble modal
+                footer.appendChild(cancelBtn);
+                footer.appendChild(confirmBtn);
+                wrapper.appendChild(header);
+                wrapper.appendChild(mapDiv);
+                wrapper.appendChild(footer);
+                modal.appendChild(wrapper);
+                document.body.appendChild(modal);
+
+                // 7. Setup Leaflet map
+                const map = L.map(mapDiv.id).setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                }).addTo(map);
+
+                let marker = null;
+                let selectedLatLng = null;
+
+                map.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+                selectedLatLng = e.latlng;
+
+                if (marker) {
+                    marker.setLatLng(e.latlng);
+                } else {
+                    marker = L.marker(e.latlng, { draggable: true }).addTo(map);
+                    marker.bindPopup("Drag to adjust. Click 'Confirm' when ready.").openPopup();
+
+                    marker.on('dragend', (event) => {
+                    selectedLatLng = event.target.getLatLng();
+                    });
+                }
+
+                confirmBtn.disabled = false;
+                });
+
+                const cleanup = () => {
+                map.remove();
+                document.body.removeChild(modal);
+                };
+
+                cancelBtn.onclick = () => {
+                cleanup();
+                resolve(null);
+                };
+
+                confirmBtn.onclick = () => {
+                if (selectedLatLng) {
+                    cleanup();
+                    resolve({
+                    latitude: selectedLatLng.lat,
+                    longitude: selectedLatLng.lng
+                    });
+                }
+                };
+            });
+        }
+
+        function showLocationOnMap(latitude, longitude) {
+            // 1. Create modal container
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5);
+                display: flex; align-items: center; justify-content: center;
+                z-index: 9999;
+            `;
+
+            // 2. Wrapper for the modal content
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = `
+                width: 80vw; height: 80vh; background: white;
+                border-radius: 10px; overflow: hidden; position: relative;
+                display: flex; flex-direction: column;
+            `;
+
+            // 3. Header with info
+            const header = document.createElement('div');
+            header.innerText = `📍 Showing location: Latitude ${latitude.toFixed(5)}, Longitude ${longitude.toFixed(5)}`;
+            header.style.cssText = `
+                padding: 12px; font-size: 16px; font-weight: bold;
+                background: #f0f0f0; text-align: center; border-bottom: 1px solid #ccc;
+            `;
+
+            // 4. Map container
+            const mapDiv = document.createElement('div');
+            mapDiv.style.cssText = `flex: 1;`;
+            mapDiv.id = 'leaflet-map-view-' + Date.now();
+
+            // 5. Footer with close button
+            const footer = document.createElement('div');
+            footer.style.cssText = `
+                padding: 10px; background: #f9f9f9; border-top: 1px solid #ccc;
+                display: flex; justify-content: flex-end;
+            `;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.innerText = "Close";
+            closeBtn.style.cssText = `padding: 6px 12px;`;
+
+            // 6. Assemble the modal
+            footer.appendChild(closeBtn);
+            wrapper.appendChild(header);
+            wrapper.appendChild(mapDiv);
+            wrapper.appendChild(footer);
+            modal.appendChild(wrapper);
+            document.body.appendChild(modal);
+
+            // 7. Initialize the Leaflet map
+            const map = L.map(mapDiv.id).setView([latitude, longitude], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+            }).addTo(map);
+
+            const marker = L.marker([latitude, longitude])
+                .addTo(map)
+                .bindPopup(`Lat: ${latitude.toFixed(5)}, Lng: ${longitude.toFixed(5)}`)
+                .openPopup();
+
+            // 8. Close button handler
+            const cleanup = () => {
+                map.remove();
+                document.body.removeChild(modal);
+            };
+
+            closeBtn.onclick = cleanup;
+        }
+
+        const func = async () => {
+            const coords = await selectLocationOnMap();
+            console.log(coords);
+
+            await showLocationOnMap(coords.latitude, coords.longitude);
+        };
+        func();
+    </script>
+</body>
+</html>

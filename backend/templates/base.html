@@ -11,33 +11,53 @@
     <!-- Tailwind CSS (via CDN for now) -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 font-mono">
 
     <!-- Header Section -->
-    <header class="bg-yellow-600 text-white py-4">
-        <div class="container">
-            <div class="logo">
-                <h1 class="text-3xl text-center mb-2">Student Marketplace</h1>
+     <header class="bg-black text-white py-4">
+    <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <!-- Logo & Title -->
+        <a href="{% url 'site_index' %}" class="text-inherit no-underline">
+            <div class="flex flex-col items-center space-y-2">
+                <h1 class="text-5xl font-bold">StudentMart</h1>
+                <div class="text-lg ml-60"> <!-- Increase font size -->
+                <span>For the <span class="font-bold italic">students</span>, By the <span class="font-bold italic">students</span></span>
+                </div>
             </div>
-            <nav>
-                <ul class="flex justify-center space-x-4">
-                    <li><a href="#home" class="text-lg hover:text-yellow-400 transition">Home</a></li>
-                    <li><a href="#listings" class="text-lg hover:text-yellow-400 transition">Listings</a></li>
-                    <li><a href="#sell" class="text-lg hover:text-yellow-400 transition">Sell</a></li>
-                    <li><a href="#search" class="text-lg hover:text-yellow-400 transition">Search</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-    
-    <body>
+        </a>
+
+      <!-- Menu -->
+      <nav class="space-x-8 *:text-2xl">
+        <a href="{% url 'site_index' %}" class="hover:text-yellow-400">Home</a>
+        <a href="{% url 'profile' %}" class="hover:text-yellow-400">Profile</a>
+        <a href="{% url 'create_product' %}" class="hover:text-yellow-400">Sell</a>
+        <a href="{% url 'ai_index' %}" class="hover:text-yellow-400">AI Helper</a>
+      </nav>
+
+      <!-- Notifications & Social Icons -->
+      <div class="flex items-center space-x-4">
+        <!-- Notifications Icon -->
+        <button class="relative">
+          <svg class="w-6 h-6 text-white hover:text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c2.21 0 4 1.79 4 4v2h4v2h-4v2h-8v-2H4v-2h4V12c0-2.21 1.79-4 4-4z"/>
+          </svg>
+          <!-- Notification Badge -->
+          <span class="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-600"></span>
+        </button>
+
+        <!-- Social Media Icons -->
+        
+      </div>
+    </div>
+  </header>
+        <div class="min-h-[100vh] py-4">
         {% block content %}
 
         {% endblock %}
-    </body>
+        </div>
     <!-- Footer Section -->
-    <footer class="bg-gray-800 text-white py-6 text-center">
-        <p>&copy; 2025 Student Marketplace. All Rights Reserved.</p>
+    <footer class="bg-gray-400 text-black py-6 text-center">
+        <p>&copy; 2025 StudentMart. All Rights Reserved.</p>
     </footer>
 
     <!-- Bootstrap JS and dependencies -->

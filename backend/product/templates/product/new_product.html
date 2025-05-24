@@ -65,6 +65,7 @@
         </form>
         <script>
             const txtPrice = document.querySelectorAll('input[name="price"]')[0];
+            
             function recommend() {
                 const name = document.getElementById("id_name").value;
                 const description = document.getElementById("id_description").value;
@@ -83,9 +84,10 @@
                 Based on that information, estimate a good price in Bangladeshi Taka (BDT) and give a brief explanation 30-50 words
                 `;
 
+                const suggestions = document.getElementById("suggestions");
                 suggestions.innerHTML = '';
+                suggestions.style.visibility = 'visible';
                 streamAIResponse(prompt, (chunk) => {
-                    const suggestions = document.getElementById("suggestions");
                     suggestions.innerHTML += chunk;
                 });
             }
@@ -107,7 +109,9 @@
                 </g>
             </svg></a>
             </span></div>
-            <p class="bg-slate-300 mt-2 border border-black" id="suggestions">Hello</p>`;
+            <p class="bg-slate-300 mt-2 px-2 border-2 border-black" id="suggestions"></p>`;
+            const suggestions = document.getElementById("suggestions");
+            suggestions.style.visibility = 'hidden';
         </script>
     </div>
 {% endblock %}

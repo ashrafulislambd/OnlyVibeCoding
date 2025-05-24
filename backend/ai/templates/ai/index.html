@@ -1,6 +1,19 @@
-<html>
-    <body>
-        <h1>Hello World</h1>
+{% extends 'base.html' %}
+{% block content %}
+        <div class="container">
+            <h1 class="text-center text-5xl mb-3 font-semibold font-mono">Your Personal AI Assistant</h1>
+            <div class="flex justify-center">
+                <div class="bg-white h-[300] flex items-center justify-center text-gray-300">
+                    <div class="relative bg-gray-900 p-4 rounded-xl border-2 border-blue-300">
+                        <input type="text" id="question" placeholder="Ask a question..." class="bg-transparent pl-10 text-xl w-96">
+                    </div>
+                </div>
+                <button id="ai-btn" class="btn btn-primary">Ask</button>
+            </div>
+            
+            <p id="suggestions" class="p-10 mt-4 text-2xl font-semibold shadow-xl border-3 border-solid"></p>
+            </div>
+        </div>
         <script>
             async function streamAIResponse(prompt, onChunk) {
                 const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -53,9 +66,32 @@
                     buffer = lines[lines.length - 1]; // keep leftover
                 }
             }
-            streamAIResponse("Write a hello world code for 'Python' in HTML formatting (plain HTML response only)?", (chunk) => {
-                document.write(chunk);
+
+            const suggestions = document.getElementById("suggestions");
+            suggestions.style.visibility = "hidden";
+            
+            document.getElementById("ai-btn").addEventListener("click", (e) => {
+                const suggestions = document.getElementById("suggestions");
+                suggestions.style.visibility = "visible";
+                const question = document.getElementById("question").value;
+                const prompt = `
+                    You are an expert product recommender. You have all the data of the products availalbe,
+
+                    the data is:
+                    {{ summary }}
+
+                    Users question is: ${question}
+
+                    Now, you recommend the user a product, and explain him/her why would it be good to purchase it in 50-100 words or if
+                    you think you don't have information to answer user's question let him/her know. Always follow up with if the user has more question or not in a
+                    separate line
+                    `;
+
+                streamAIResponse(prompt, (chunk) => {
+                    suggestions.innerHTML += chunk;
+                });
             });
         </script>
     </body>
 </html>
+{% endblock %}
