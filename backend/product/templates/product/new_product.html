@@ -3,6 +3,59 @@
     {% load crispy_forms_tags %}
     <div class="container max-w-[70%] py-10">
         <h1 class="text-4xl mb-4">Create a new listing</h1>
+        <script>
+            async function streamAIResponse(prompt, onChunk) {
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                    'Authorization': 'Bearer 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',
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                    model: 'llama3-8b-8192',
+                    messages: [
+                        { role: 'system', content: 'You are a helpful AI.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    temperature: 0.7,
+                    stream: true       // <-- enable streaming
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    throw new Error(`API error ${res.status}: ${err}`);
+                }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    let lines = buffer.split('\n');
+
+                    // Process all complete lines except the last (might be partial)
+                    for (let i = 0; i < lines.length - 1; i++) {
+                    const line = lines[i].trim();
+                    if (!line.startsWith('data:')) continue;
+                    const json = line.replace(/^data:\s*/, '');
+                    if (json === '[DONE]') return;
+                    try {
+                        const { choices } = JSON.parse(json);
+                        const chunk = choices[0].delta.content;
+                        if (chunk) onChunk(chunk);
+                    } catch (e) {
+                        console.warn('Could not parse chunk', e);
+                    }
+                    }
+                    buffer = lines[lines.length - 1]; // keep leftover
+                }
+            }
+        </script>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form | crispy }}
@@ -10,5 +63,51 @@
                 Submit
             </button>
         </form>
+        <script>
+            const txtPrice = document.querySelectorAll('input[name="price"]')[0];
+            function recommend() {
+                const name = document.getElementById("id_name").value;
+                const description = document.getElementById("id_description").value;
+                const listing_type = document.getElementById("id_listing_type").value;
+                const pricing_type = document.getElementById("id_pricing_type").value;
+
+                const prompt = `
+                You are an expert price predictor. You are given a product details and you are required
+                to estimate the price.
+
+                Well, the Product is ${name}
+                Description: ${description}
+                Listing Type: ${listing_type}
+                Pricing Type: ${pricing_type}
+
+                Based on that information, estimate a good price in Bangladeshi Taka (BDT) and give a brief explanation 30-50 words
+                `;
+
+                suggestions.innerHTML = '';
+                streamAIResponse(prompt, (chunk) => {
+                    const suggestions = document.getElementById("suggestions");
+                    suggestions.innerHTML += chunk;
+                });
+            }
+            
+            txtPrice.outerHTML = `<div class="flex flex-row items-center gap-5">${txtPrice.outerHTML}<span>
+            <a href="javascript:recommend()"><svg width="30px" height="30px" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <title>Get AI Suggestion for Price</title>
+                <g id="Layer_2" data-name="Layer 2">
+                    <g id="invisible_box" data-name="invisible box">
+                    <rect width="48" height="48" fill="none"/>
+                    </g>
+                    <g id="Q3_icons" data-name="Q3 icons">
+                    <g>
+                        <path d="M45.6,18.7,41,14.9V7.5a1,1,0,0,0-.6-.9L30.5,2.1h-.4l-.6.2L24,5.9,18.5,2.2,17.9,2h-.4L7.6,6.6a1,1,0,0,0-.6.9v7.4L2.4,18.7a.8.8,0,0,0-.4.8v9H2a.8.8,0,0,0,.4.8L7,33.1v7.4a1,1,0,0,0,.6.9l9.9,4.5h.4l.6-.2L24,42.1l5.5,3.7.6.2h.4l9.9-4.5a1,1,0,0,0,.6-.9V33.1l4.6-3.8a.8.8,0,0,0,.4-.7V19.4h0A.8.8,0,0,0,45.6,18.7Zm-5.1,6.8H42v1.6l-3.5,2.8-.4.3-.4-.2a1.4,1.4,0,0,0-2,.7,1.5,1.5,0,0,0,.6,2l.7.3h0v5.4l-6.6,3.1-4.2-2.8-.7-.5V25.5H27a1.5,1.5,0,0,0,0-3H25.5V9.7l.7-.5,4.2-2.8L37,9.5v5.4h0l-.7.3a1.5,1.5,0,0,0-.6,2,1.4,1.4,0,0,0,1.3.9l.7-.2.4-.2.4.3L42,20.9v1.6H40.5a1.5,1.5,0,0,0,0,3ZM21,25.5h1.5V38.3l-.7.5-4.2,2.8L11,38.5V33.1h0l.7-.3a1.5,1.5,0,0,0,.6-2,1.4,1.4,0,0,0-2-.7l-.4.2-.4-.3L6,27.1V25.5H7.5a1.5,1.5,0,0,0,0-3H6V20.9l3.5-2.8.4-.3.4.2.7.2a1.4,1.4,0,0,0,1.3-.9,1.5,1.5,0,0,0-.6-2L11,15h0V9.5l6.6-3.1,4.2,2.8.7.5V22.5H21a1.5,1.5,0,0,0,0,3Z"/>
+                        <path d="M13.9,9.9a1.8,1.8,0,0,0,0,2.2l2.6,2.5v2.8l-4,4v5.2l4,4v2.8l-2.6,2.5a1.8,1.8,0,0,0,0,2.2,1.5,1.5,0,0,0,1.1.4,1.5,1.5,0,0,0,1.1-.4l3.4-3.5V29.4l-4-4V22.6l4-4V13.4L16.1,9.9A1.8,1.8,0,0,0,13.9,9.9Z"/>
+                        <path d="M31.5,14.6l2.6-2.5a1.8,1.8,0,0,0,0-2.2,1.8,1.8,0,0,0-2.2,0l-3.4,3.5v5.2l4,4v2.8l-4,4v5.2l3.4,3.5a1.7,1.7,0,0,0,2.2,0,1.8,1.8,0,0,0,0-2.2l-2.6-2.5V30.6l4-4V21.4l-4-4Z"/>
+                    </g>
+                    </g>
+                </g>
+            </svg></a>
+            </span></div>
+            <p class="bg-slate-300 mt-2 border border-black" id="suggestions">Hello</p>`;
+        </script>
     </div>
 {% endblock %}

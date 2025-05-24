@@ -1,0 +1,61 @@
+<html>
+    <body>
+        <h1>Hello World</h1>
+        <script>
+            async function streamAIResponse(prompt, onChunk) {
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                    'Authorization': 'Bearer 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',
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                    model: 'llama3-8b-8192',
+                    messages: [
+                        { role: 'system', content: 'You are a helpful AI.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    temperature: 0.7,
+                    stream: true       // <-- enable streaming
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    throw new Error(`API error ${res.status}: ${err}`);
+                }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    let lines = buffer.split('\n');
+
+                    // Process all complete lines except the last (might be partial)
+                    for (let i = 0; i < lines.length - 1; i++) {
+                    const line = lines[i].trim();
+                    if (!line.startsWith('data:')) continue;
+                    const json = line.replace(/^data:\s*/, '');
+                    if (json === '[DONE]') return;
+                    try {
+                        const { choices } = JSON.parse(json);
+                        const chunk = choices[0].delta.content;
+                        if (chunk) onChunk(chunk);
+                    } catch (e) {
+                        console.warn('Could not parse chunk', e);
+                    }
+                    }
+                    buffer = lines[lines.length - 1]; // keep leftover
+                }
+            }
+            streamAIResponse("Write a hello world code for 'Python' in HTML formatting (plain HTML response only)?", (chunk) => {
+                document.write(chunk);
+            });
+        </script>
+    </body>
+</html>
