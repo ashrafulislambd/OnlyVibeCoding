@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Marketplace</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to an external CSS file for styling -->
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="container">
+            <h1>Student Marketplace</h1>
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/listings">Listings</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="container">
+            <h2>Welcome to the Student Marketplace</h2>
+            <p>Find textbooks, gadgets, tutoring services, and more – all at student-friendly prices.</p>
+            <a href="/listings" class="cta-button">Browse Listings</a>
+        </div>
+    </section>
+
+    <!-- Search & Filter Section -->
+    <section id="search-filter">
+        <div class="container">
+            <h2>Find What You Need</h2>
+            <form action="/search" method="GET">
+                <div class="search-box">
+                    <input type="text" name="query" placeholder="Search for items, services, or categories...">
+                    <button type="submit">Search</button>
+                </div>
+                <div class="filters">
+                    <label for="category">Category:</label>
+                    <select name="category" id="category">
+                        <option value="textbooks">Textbooks</option>
+                        <option value="gadgets">Gadgets</option>
+                        <option value="tutoring">Tutoring</option>
+                        <option value="services">Services</option>
+                    </select>
+                    <label for="price-range">Price Range:</label>
+                    <input type="range" name="price-range" id="price-range" min="0" max="1000" step="10">
+                    <label for="university">University:</label>
+                    <input type="text" name="university" id="university" placeholder="Enter University">
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Listings Section -->
+    <section id="listings">
+        <div class="container">
+            <h2>Featured Listings</h2>
+            <div class="listing">
+                <div class="listing-info">
+                    <h3>Used Textbook: Calculus 101</h3>
+                    <p>Price: $50</p>
+                    <p>Condition: Used</p>
+                    <p>University: University A</p>
+                </div>
+                <div class="listing-actions">
+                    <button>Contact Seller</button>
+                    <button>Bid Now</button>
+                </div>
+            </div>
+            <div class="listing">
+                <div class="listing-info">
+                    <h3>Math Tutoring Service</h3>
+                    <p>Hourly Rate: $20</p>
+                    <p>University: University B</p>
+                </div>
+                <div class="listing-actions">
+                    <button>Contact Seller</button>
+                    <button>Request Service</button>
+                </div>
+            </div>
+            <!-- More listings here -->
+        </div>
+    </section>
+
+    <!-- Seller Controls Section -->
+    <section id="seller-controls">
+        <div class="container">
+            <h2>Sell Your Items or Services</h2>
+            <form action="/add-listing" method="POST">
+                <label for="listing-type">Listing Type:</label>
+                <select name="listing-type" id="listing-type">
+                    <option value="item">Item</option>
+                    <option value="service">Service</option>
+                </select>
+
+                <label for="title">Listing Title:</label>
+                <input type="text" name="title" id="title" required>
+
+                <label for="description">Description:</label>
+                <textarea name="description" id="description" required></textarea>
+
+                <label for="price">Price:</label>
+                <input type="number" name="price" id="price" required>
+
+                <label for="visibility">Visibility:</label>
+                <select name="visibility" id="visibility">
+                    <option value="public">Public</option>
+                    <option value="university">Only University</option>
+                    <option value="private">Private (Peer-to-Peer)</option>
+                </select>
+
+                <label for="pricing-option">Pricing Option:</label>
+                <select name="pricing-option" id="pricing-option">
+                    <option value="fixed">Fixed Price</option>
+                    <option value="bidding">Bidding</option>
+                    <option value="hourly">Hourly</option>
+                </select>
+
+                <button type="submit">Post Listing</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Student Marketplace. All rights reserved.</p>
+            <p><a href="/terms">Terms of Service</a> | <a href="/privacy">Privacy Policy</a></p>
+        </div>
+    </footer>
+</body>
+</html>

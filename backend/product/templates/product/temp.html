@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Marketplace</title>
+
+    <!-- Bootstrap CSS Link -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Tailwind CSS (via CDN for now) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header Section -->
+    <header class="bg-yellow-600 text-white py-4">
+        <div class="container">
+            <div class="logo">
+                <h1 class="text-3xl text-center mb-2">Student Marketplace</h1>
+            </div>
+            <nav>
+                <ul class="flex justify-center space-x-4">
+                    <li><a href="#home" class="text-lg hover:text-yellow-400 transition">Home</a></li>
+                    <li><a href="#listings" class="text-lg hover:text-yellow-400 transition">Listings</a></li>
+                    <li><a href="#sell" class="text-lg hover:text-yellow-400 transition">Sell</a></li>
+                    <li><a href="#search" class="text-lg hover:text-yellow-400 transition">Search</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Home Section -->
+    <section id="home" class="text-center py-5">
+        <div class="container">
+            <h2 class="text-4xl mb-4">Welcome to the Student Marketplace</h2>
+            <p class="text-xl mb-8">Buy, sell, and exchange goods and services with your peers at universities around the world!</p>
+        </div>
+    </section>
+
+    <!-- Listings Section -->
+    <section id="listings" class="py-5">
+        <div class="container">
+            <h2 class="text-3xl mb-4">Browse Listings</h2>
+            <div id="search-filter" class="mb-4">
+                <div class="form-group mb-4">
+                    <input type="text" placeholder="Search for items or services..." id="search-input" class="w-full py-3 px-5 text-lg border border-gray-300 rounded-full outline-none focus:ring-4 focus:ring-orange-400 transition">
+                </div>
+                <button onclick="filterListings()" class="btn btn-warning py-2 px-5 text-white rounded-lg bg-yellow-600 hover:bg-yellow-500 transition">Search</button>
+            </div>
+
+            <div class="filters mb-4">
+                <div class="form-group mb-4">
+                    <label for="category" class="block mb-2">Category:</label>
+                    <select id="category" class="form-control py-2 px-4 rounded-lg border border-gray-300">
+                        <option value="all">All</option>
+                        <option value="textbooks">Textbooks</option>
+                        <option value="gadgets">Gadgets</option>
+                        <option value="services">Services</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="price" class="block mb-2">Price Range:</label>
+                    <div class="flex space-x-4">
+                        <input type="number" id="min-price" placeholder="Min Price" step="0.01" class="form-control py-2 px-4 rounded-lg border border-gray-300">
+                        <input type="number" id="max-price" placeholder="Max Price" step="0.01" class="form-control py-2 px-4 rounded-lg border border-gray-300">
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="university" class="block mb-2">University:</label>
+                    <select id="university" class="form-control py-2 px-4 rounded-lg border border-gray-300">
+                        <option value="all">All Universities</option>
+                        <option value="university1">University 1</option>
+                        <option value="university2">University 2</option>
+                    </select>
+                </div>
+
+                <button onclick="applyFilters()" class="btn btn-warning py-2 px-5 text-white rounded-lg bg-yellow-600 hover:bg-yellow-500 transition">Apply Filters</button>
+            </div>
+
+            <div id="listing-cards" class="listing-cards">
+                <!-- Listings will be dynamically added here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Sell Section -->
+    <section id="sell" class="py-5">
+        <div class="container">
+            <h2 class="text-3xl mb-4">List Your Item or Service</h2>
+            <form id="listing-form" class="space-y-4">
+                <div class="form-group">
+                    <label for="listing-type" class="block mb-2">Listing Type:</label>
+                    <select id="listing-type" class="form-control py-2 px-4 rounded-lg border border-gray-300">
+                        <option value="item">Item</option>
+                        <option value="service">Service</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title" class="block mb-2">Title:</label>
+                    <input type="text" id="title" placeholder="Enter item or service title" class="form-control py-2 px-4 rounded-lg border border-gray-300" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="block mb-2">Description:</label>
+                    <textarea id="description" placeholder="Enter a detailed description" class="form-control py-2 px-4 rounded-lg border border-gray-300" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="price" class="block mb-2">Price:</label>
+                    <input type="number" id="price" placeholder="Enter price" step="0.01" class="form-control py-2 px-4 rounded-lg border border-gray-300" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="visibility" class="block mb-2">Visibility:</label>
+                    <select id="visibility" class="form-control py-2 px-4 rounded-lg border border-gray-300">
+                        <option value="university">University Only</option>
+                        <option value="all">All Students</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-warning py-2 px-5 text-white rounded-lg bg-yellow-600 hover:bg-yellow-500 transition">Post Listing</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <!-- TODO: Add searching -->
+    <footer class="bg-gray-800 text-white py-6 text-center">
+        <p>&copy; 2025 Student Marketplace. All Rights Reserved.</p>
+    </footer>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Custom JS (add your script functionality here) -->
+    <script src="app.js"></script>
+
+</body>
+</html>
