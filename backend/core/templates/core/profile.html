@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="container max-w-[70%] py-10">
+        <h1 class="text-4xl mb-4">Profile Info</h1>
+        <a href="{% url 'edit_profile' %}" class="btn btn-primary mb-2"><span class="fa fa-edit"></span>Edit</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <td><strong>Info</strong></td>
+                    <td><string>Value</string></td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><i>University</i></td>
+                    <td>{{ profile.university }}</td>
+                </tr>
+                <tr>
+                    <td><i>Department</i></td>
+                    <td>{{ profile.department | default:"Not set" }}</td>
+                </tr>
+                <tr>
+                    <td><i>Prorgam</i></td>
+                    <td>{{ profile.program | default:"Not set" }}</td>
+                </tr>
+                <tr>
+                    <td><i>Year of Study</i></td>
+                    <td>{{ profile.year_of_study | default:"Not set" }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
