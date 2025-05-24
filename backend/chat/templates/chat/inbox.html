@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Inbox</h2>
+<div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll;"></div>
+
+<script>
+function fetchMessages() {
+    fetch("{% url 'inbox' %}")  // Ensure this matches your API name
+        .then(response => response.json())
+        .then(data => {
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML = "";
+
+            data.forEach(msg => {
+                const messageDiv = document.createElement("div");
+                messageDiv.innerHTML = `
+                    <strong>User ${msg.user}</strong>: ${msg.message}
+                    <br><small>${new Date(msg.timestamp).toLocaleString()}</small>
+                `;
+                chatBox.appendChild(messageDiv);
+            });
+        })
+        .catch(error => console.error("Error fetching messages:", error));
+}
+
+// Poll every 3 seconds
+setInterval(fetchMessages, 3000);
+fetchMessages(); // Initial load
+</script>
+{% endblock %}

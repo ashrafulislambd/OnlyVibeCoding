@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat UI</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+
+  <!-- Pass Django context variables into JS -->
+  <script>
+    const CURRENT_USER_ID = {{ current_user_id }};
+    const OTHER_USER_ID   = {{ other_user_id }};
+    const INBOX_API_URL   = "{% url 'inbox' %}";
+    const POLL_INTERVAL   = 200; 
+  </script>
+
+  <!-- Chat Container -->
+  <div class="flex h-screen">
+
+    <!-- Left Sidebar: Contacts List -->
+    <div class="w-1/4 bg-white border-r">
+      <div class="p-4 border-b">
+        <h2 class="text-lg font-semibold">Messages</h2>
+      </div>
+      <div class="p-4">
+        <input type="text" placeholder="Search" class="w-full p-2 border rounded-lg">
+      </div>
+      <div class="space-y-4 p-4">
+        <!-- Static example contacts -->
+        <div class="flex items-center">
+          <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Profile Image" class="w-10 h-10 rounded-full object-cover mr-3">
+          <div>
+            <span class="font-semibold text-sm">Albert Flores</span>
+            <p class="text-xs text-gray-500">Hi, I'm confirming your check-in...</p>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <img src="https://randomuser.me/api/portraits/men/2.jpg" alt="Profile Image" class="w-10 h-10 rounded-full object-cover mr-3">
+          <div>
+            <span class="font-semibold text-sm">Annette Black</span>
+            <p class="text-xs text-gray-500">I'm arriving tomorrow afternoon...</p>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <img src="https://randomuser.me/api/portraits/men/3.jpg" alt="Profile Image" class="w-10 h-10 rounded-full object-cover mr-3">
+          <div>
+            <span class="font-semibold text-sm">User 8 (Islamic University of Technology)</span>
+            <p class="text-xs text-gray-500">Cool! Is there a coffee machine...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Chat Window -->
+    <div class="flex-1 bg-white flex flex-col">
+
+      <!-- Header Section (Profile) -->
+      <div class="flex items-center justify-between p-4 border-b">
+        <div class="flex items-center">
+          <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Profile Image" class="w-10 h-10 rounded-full object-cover mr-3">
+          <div>
+            <span class="font-semibold text-lg">Ashikul Islam Nirjan</span>
+            <p class="text-sm text-gray-500">Islamic University of Technology</p>
+          </div>
+        </div>
+        <div class="flex space-x-3">
+          <button class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 12h18M3 19h18"></path>
+            </svg>
+          </button>
+          <button class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Messages -->
+      <div id="chat-messages" class="p-4 flex-1 overflow-y-scroll space-y-4">
+        <!-- Messages will be injected here by JS -->
+      </div>
+
+      <!-- Message Input Area -->
+      <div class="flex items-center p-4 border-t">
+        <input id="message-input" type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type a message...">
+        <button id="send-btn" class="ml-3 text-blue-500 hover:text-blue-700 focus:outline-none">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Polling Script -->
+  <script>
+    function buildMessage(msg) {
+      const isSent = (msg.sender === CURRENT_USER_ID);
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('flex');
+      if (isSent) wrapper.classList.add('justify-end');
+
+      // avatar
+      const avatar = document.createElement('img');
+      avatar.src = msg.image || 'https://randomuser.me/api/portraits/lego/1.jpg';
+      avatar.classList.add('w-8','h-8','rounded-full','object-cover');
+      avatar.classList.add(isSent ? 'ml-3' : 'mr-3');
+
+      // bubble
+      const bubble = document.createElement('div');
+      const extraClasses = isSent
+        ? ['bg-blue-500','text-white']
+        : ['bg-gray-200','text-gray-800'];
+      bubble.classList.add('p-3','rounded-lg','max-w-xs', ...extraClasses);
+      bubble.innerHTML = `
+        <p class="text-sm">${msg.message}</p>
+        <p class="text-[10px] text-gray-500 text-right mt-1">
+          ${new Date(msg.timestamp).toLocaleTimeString()}
+        </p>`;
+
+      if (isSent) {
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(avatar);
+      } else {
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+      }
+
+      return wrapper;
+    }
+
+    async function pollInbox() {
+      try {
+        const res = await fetch(INBOX_API_URL, { credentials: 'include' });
+        if (!res.ok) throw 'Network error';
+        const data = await res.json();
+        data.reverse();
+
+        const convo = data.filter(m =>
+          (m.sender === CURRENT_USER_ID && m.user === OTHER_USER_ID) ||
+          (m.sender === OTHER_USER_ID && m.user === CURRENT_USER_ID)
+        );
+
+        const container = document.getElementById('chat-messages');
+        container.innerHTML = '';
+        convo.forEach(m => container.appendChild(buildMessage(m)));
+        container.scrollTop = container.scrollHeight;
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }
+
+    function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + '=')) {
+        cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function sendMessage(userId, messageText) {
+  const csrfToken = getCookie('csrftoken');
+
+  fetch("{% url 'send_message' %}", {
+        method: 'POST',
+        headers: {
+        'X-CSRFToken': csrfToken,
+        },
+        body: new URLSearchParams({
+        user: userId,
+        message: messageText
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+        console.log('✅ Message sent! ID:', data.message_id);
+        } else {
+        console.log('⚠️ Server response:', data);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error sending message:', error);
+    });
+    }
+
+    const sendBtn = document.getElementById('send-btn');
+    const inputBox = document.getElementById("message-input");
+    inputBox.addEventListener('keydown', (e) => {
+        if(e.key == 'Enter') {
+            e.preventDefault();
+            sendBtn.click();
+        }
+    })
+
+    sendBtn.addEventListener('click', (e) => {
+        console.log(OTHER_USER_ID, CURRENT_USER_ID);
+        const message = inputBox.value;
+        inputBox.value = '';
+        sendMessage(OTHER_USER_ID, message);
+    });
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+      pollInbox();
+      setInterval(pollInbox, POLL_INTERVAL);
+    });
+  </script>
+
+</body>
+</html>
