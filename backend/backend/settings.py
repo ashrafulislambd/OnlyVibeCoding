@@ -50,6 +50,10 @@ INSTALLED_APPS = [
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://onlyvibecoding.onrender.com'
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
