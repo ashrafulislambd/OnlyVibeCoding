@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class InboxMessage(models.Model):
-    message = models.CharField(max_length=300)
+    message = models.CharField(max_length=5000000000)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender')
     timestamp = models.DateTimeField(auto_now_add=True)
