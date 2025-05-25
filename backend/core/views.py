@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -24,6 +24,7 @@ def signup(request):
             profile.user = user
             profile.save()
             messages.success(request, "Successfully created an account")
+            return redirect("/login")
     else:   
         form = SignupForm()
     return render(request, "core/signup.html", { "form" : form })
